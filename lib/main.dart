@@ -65,6 +65,12 @@ class MyAppState extends ChangeNotifier {
     favorites.remove(pair);
     notifyListeners(); // Atualiza a UI para remover o favorito e não causar erro
   }
+
+  void removeHistory(WordPair pair) {
+    history.remove(pair);
+    // WIP !!!!!!!
+    notifyListeners(); // Atualiza a UI para remover o favorito e não causar erro
+  }
 }
 
 class MyHomePage extends StatefulWidget {
@@ -263,17 +269,23 @@ class _HistoryListViewState extends State<HistoryListView> {
           return SizeTransition(
             sizeFactor: animation,
             child: Center(
-              child: TextButton.icon(
-                onPressed: () {
-                  appState.toggleFavorite(pair);
-                },
-                icon: appState.favorites.contains(pair)
-                    ? Icon(Icons.favorite, size: 12)
-                    : SizedBox(),
-                label: Text(
+              child: ListTile(
+                leading: IconButton(icon: Icon(appState.favorites.contains(pair) ? Icons.favorite : Icons.favorite_border, size: 12), //SizedBox(), // Se deixar SizedBox, fica sem ícone até favoritar
+                          onPressed: () {
+                            appState.toggleFavorite(pair);
+                            print("$pair pressed!");
+                          }),
+                title: Text(
                   pair.asLowerCase,
                   semanticsLabel: pair.asPascalCase,
                 ),
+                trailing: IconButton(
+                        icon:const Icon(Icons.delete_outline, semanticLabel: 'Delete'), 
+                        onPressed: () { 
+                          print("DeleteHistory function hasn't been implemented yet. Heavily WIP!");
+                          showAlertDialog(context);
+                          //appState.removeHistory(pair);
+                        }),
               ),
             ),
           );
@@ -303,7 +315,8 @@ class FavoritesPage extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.all(30),
-          child: Text('You have '
+          child: Text(appState.favorites.length == 1 ? 'You have '
+              '${appState.favorites.length} favorite:' : 'You have '
               '${appState.favorites.length} favorites:'),
         ),
         Expanded(
@@ -333,4 +346,34 @@ class FavoritesPage extends StatelessWidget {
       ],
     );
   }
+}
+
+// ------------------ Alerta -----------------------
+
+showAlertDialog(BuildContext context) {
+
+  // set up the button
+  Widget okButton = TextButton(
+    child: Text("OK"),
+    onPressed: () { 
+      Navigator.of(context).pop();
+    },
+  );
+
+  // set up the AlertDialog
+  AlertDialog alert = AlertDialog(
+    title: Text("My title"),
+    content: Text("This is my message."),
+    actions: [
+      okButton,
+    ],
+  );
+
+  // show the dialog
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
 }
