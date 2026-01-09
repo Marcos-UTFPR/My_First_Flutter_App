@@ -1,6 +1,7 @@
 # my_first_flutter_app
 
-A new Flutter project.
+A new Flutter project. Tutorial found at: https://codelabs.developers.google.com/codelabs/flutter-codelab-first?hl=pt-br#2
+and at: https://dartpad.dev/?id=e7076b40fb17a0fa899f9f7a154a02e8
 
 # Initial Info
 All done!
@@ -12,6 +13,7 @@ In order to run your application, type:
 
   $ cd .
   $ flutter run
+  $ 3
 
 ## Getting Started
 
