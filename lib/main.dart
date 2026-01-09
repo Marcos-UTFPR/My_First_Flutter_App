@@ -31,25 +31,39 @@ class MyAppState extends ChangeNotifier {
   var favorites = <WordPair>[];
   var history = <WordPair>[];
 
+  GlobalKey? historyListKey;
+
   // ↓ Add this.
   void getNext() {
-    history.add(current); // Adiciona a palavra anterior ao vetor
+    manageHistory(current); // Adiciona a palavra anterior ao vetor
     current = WordPair.random();
     notifyListeners();
   }
 
-  void toggleFavorite() {
-    if (favorites.contains(current)) {
-      favorites.remove(current);
+  void manageHistory(WordPair? word) {
+    word = word ?? current;
+    /*if (history.length > 5){
+      history.remove(history.last); // Remove a primeira palavra do histórico se encher demais
+      notifyListeners();
+    }*/
+    history.insert(0, word);
+    var animatedList = historyListKey?.currentState as AnimatedListState?;
+    animatedList?.insertItem(0);
+  }
+
+  void toggleFavorite([WordPair? pair]) {
+    pair = pair ?? current;
+    if (favorites.contains(pair)) {
+      favorites.remove(pair);
     } else {
-      favorites.add(current);
+      favorites.add(pair);
     }
     notifyListeners();
   }
 
   void removeFavorite(WordPair pair) {
     favorites.remove(pair);
-    notifyListeners();
+    notifyListeners(); // Atualiza a UI para remover o favorito e não causar erro
   }
 }
 
@@ -138,6 +152,11 @@ class GeneratorPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,  // ← Add this.
         children: [
+          Expanded(
+            flex: 3,
+            child: HistoryListView(),
+          ),
+          SizedBox(height: 10),
           Text('A random AWESOME idea:'),
           //Text(appState.current.asLowerCase),   // ← Change this...
           BigCard(pair: pair),                // ← ... to this, creating a separate widget that doesn't interact with the whole state
@@ -149,7 +168,7 @@ class GeneratorPage extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: () {
                   print('button LIKE pressed!');
-                appState.toggleFavorite();  // ← This instead of print().
+                  appState.toggleFavorite();  // ← This instead of print().
                 },
                 //child: Text('❤ Like'),
                 icon: Icon(icon),
@@ -163,7 +182,8 @@ class GeneratorPage extends StatelessWidget {
                 child: Text('Next'),
               ),
             ],
-          ),      
+          ),
+          Spacer(flex: 2),      
         ],
       ),
     );
@@ -201,11 +221,75 @@ class BigCard extends StatelessWidget {
   }
 }
 
+class HistoryListView extends StatefulWidget {
+  const HistoryListView({Key? key}) : super(key: key);
+
+  @override
+  State<HistoryListView> createState() => _HistoryListViewState();
+}
+
+class _HistoryListViewState extends State<HistoryListView> {
+  /// Needed so that [MyAppState] can tell [AnimatedList] below to animate
+  /// new items.
+  final _key = GlobalKey();
+
+  /// Used to "fade out" the history items at the top, to suggest continuation.
+  static const Gradient _maskingGradient = LinearGradient(
+    // This gradient goes from fully transparent to fully opaque black...
+    colors: [Colors.transparent, Colors.black],
+    // ... from the top (transparent) to half (0.5) of the way to the bottom.
+    stops: [0.0, 0.8],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final appState = context.watch<MyAppState>();
+    appState.historyListKey = _key;
+
+    return ShaderMask(
+      shaderCallback: (bounds) => _maskingGradient.createShader(bounds),
+      // This blend mode takes the opacity of the shader (i.e. our gradient)
+      // and applies it to the destination (i.e. our animated list).
+      blendMode: BlendMode.dstIn,
+      child: AnimatedList(
+        key: _key,
+        reverse: true,
+        padding: EdgeInsets.only(top: 100),
+        initialItemCount: appState.history.length,
+        itemBuilder: (context, index, animation) {
+          final pair = appState.history[index];
+          return SizeTransition(
+            sizeFactor: animation,
+            child: Center(
+              child: TextButton.icon(
+                onPressed: () {
+                  appState.toggleFavorite(pair);
+                },
+                icon: appState.favorites.contains(pair)
+                    ? Icon(Icons.favorite, size: 12)
+                    : SizedBox(),
+                label: Text(
+                  pair.asLowerCase,
+                  semanticsLabel: pair.asPascalCase,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+
 // ...
 
 class FavoritesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    var theme = Theme.of(context);
     var appState = context.watch<MyAppState>();
 
     if (appState.favorites.isEmpty) {
@@ -214,23 +298,38 @@ class FavoritesPage extends StatelessWidget {
       );
     }
 
-    return ListView(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(30),
           child: Text('You have '
               '${appState.favorites.length} favorites:'),
         ),
-        for (var pair in appState.favorites)
-          ListTile(
-            leading: Icon(Icons.favorite),
-            title: Text(pair.asLowerCase),
-            trailing: IconButton(
+        Expanded(
+          // Make better use of wide windows with a grid.
+          child: GridView(
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 400,
+              childAspectRatio: 400 / 80,
+            ),
+            children: [
+              for (var pair in appState.favorites)
+                ListTile(
+                  leading: Icon(Icons.favorite, color: theme.colorScheme.primary),
+                  trailing: IconButton(
                         icon:const Icon(Icons.delete_outline, semanticLabel: 'Delete'), 
                         onPressed: () { 
                           appState.removeFavorite(pair); 
-                        })
+                        }),
+                  title: Text(
+                    pair.asLowerCase,
+                    semanticsLabel: pair.asPascalCase,
+                  ),
+                ),
+            ],
           ),
+        ),
       ],
     );
   }
