@@ -28,15 +28,15 @@ class MyApp extends StatelessWidget {
 // MyAppState define os dados necessários para o app funcionar
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
+  var favorites = <WordPair>[];
+  var history = <WordPair>[];
 
   // ↓ Add this.
   void getNext() {
+    history.add(current); // Adiciona a palavra anterior ao vetor
     current = WordPair.random();
     notifyListeners();
   }
-
-  // ↓ Add the code below.
-  var favorites = <WordPair>[];
 
   void toggleFavorite() {
     if (favorites.contains(current)) {
@@ -44,6 +44,11 @@ class MyAppState extends ChangeNotifier {
     } else {
       favorites.add(current);
     }
+    notifyListeners();
+  }
+
+  void removeFavorite(WordPair pair) {
+    favorites.remove(pair);
     notifyListeners();
   }
 }
@@ -65,7 +70,8 @@ class _MyHomePageState extends State<MyHomePage> {
         page = GeneratorPage();
         break;
       case 1:
-        page = Placeholder();
+        //page = Placeholder();
+        page = FavoritesPage();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -191,6 +197,41 @@ class BigCard extends StatelessWidget {
           semanticsLabel: "${pair.first} ${pair.second}",
         ),
       ),
+    );
+  }
+}
+
+// ...
+
+class FavoritesPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+
+    if (appState.favorites.isEmpty) {
+      return Center(
+        child: Text('No favorites yet.'),
+      );
+    }
+
+    return ListView(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text('You have '
+              '${appState.favorites.length} favorites:'),
+        ),
+        for (var pair in appState.favorites)
+          ListTile(
+            leading: Icon(Icons.favorite),
+            title: Text(pair.asLowerCase),
+            trailing: IconButton(
+                        icon:const Icon(Icons.delete_outline, semanticLabel: 'Delete'), 
+                        onPressed: () { 
+                          appState.removeFavorite(pair); 
+                        })
+          ),
+      ],
     );
   }
 }
