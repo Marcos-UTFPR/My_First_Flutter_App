@@ -362,8 +362,8 @@ showAlertDialog(BuildContext context) {
 
   // set up the AlertDialog
   AlertDialog alert = AlertDialog(
-    title: Text("My title"),
-    content: Text("This is my message."),
+    title: Text("W.I.P."),
+    content: Text("Delete function hasn't been implemented yet. Yet."),
     actions: [
       okButton,
     ],
