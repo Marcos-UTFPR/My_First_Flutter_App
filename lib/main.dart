@@ -299,7 +299,7 @@ class _HistoryListViewState extends State<HistoryListView> {
                 leading: IconButton(icon: Icon(appState.favorites.contains(pair) ? Icons.favorite : Icons.favorite_border, size: 12), //SizedBox(), // Se deixar SizedBox, fica sem ícone até favoritar
                           onPressed: () {
                             appState.toggleFavorite(pair);
-                            print("$pair pressed!");
+                            print("$pair favorited!");
                           }),
                 title: Text(
                   pair.asLowerCase,
@@ -308,7 +308,7 @@ class _HistoryListViewState extends State<HistoryListView> {
                 trailing: IconButton(
                         icon:const Icon(Icons.delete_outline, semanticLabel: 'Delete'), 
                         onPressed: () { 
-                          print("DeleteHistory function has been implemented but it wasn't fully understood yet. Still WIP! - $pair pressed!");
+                          print("The method to delete History function has been implemented but it wasn't fully understood yet. Still WIP! - $pair pressed!");
                           _removeSingleItems(appState.history.indexOf(pair));
                           //showAlertDialog(context);
                           //appState.removeHistory(pair);
