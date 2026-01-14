@@ -249,6 +249,25 @@ class _HistoryListViewState extends State<HistoryListView> {
     end: Alignment.bottomCenter,
   );
 
+  void _removeSingleItems(int removeIndex) {
+    //int removeIndex = 2;
+    final appState = context.read<MyAppState>();
+    if (appState.history.asMap().containsKey(removeIndex)){
+      WordPair removedItem = appState.history.removeAt(removeIndex);
+      // This builder is just so that the animation has something
+      // to work with before it disappears from view since the
+      // original has already been deleted.
+      Widget builder(BuildContext context, Animation<double> animation) {
+        // A method to build the Card widget.
+        return _buildHistoryTile(appState, removedItem, animation);
+      }
+      var animatedList = _key.currentState as AnimatedListState?;
+      animatedList?.removeItem(removeIndex, builder); 
+    } else {
+      print("Index $removeIndex isn't in the History!");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<MyAppState>();
@@ -266,7 +285,14 @@ class _HistoryListViewState extends State<HistoryListView> {
         initialItemCount: appState.history.length,
         itemBuilder: (context, index, animation) {
           final pair = appState.history[index];
-          return SizeTransition(
+          return _buildHistoryTile(appState, pair, animation);
+        },
+      ),
+    );
+  }
+
+  Widget _buildHistoryTile(final appState, WordPair pair, Animation<double> animation) {
+    return SizeTransition(
             sizeFactor: animation,
             child: Center(
               child: ListTile(
@@ -282,19 +308,16 @@ class _HistoryListViewState extends State<HistoryListView> {
                 trailing: IconButton(
                         icon:const Icon(Icons.delete_outline, semanticLabel: 'Delete'), 
                         onPressed: () { 
-                          print("DeleteHistory function hasn't been implemented yet. Heavily WIP!");
-                          showAlertDialog(context);
+                          print("DeleteHistory function has been implemented but it wasn't fully understood yet. Still WIP! - $pair pressed!");
+                          _removeSingleItems(appState.history.indexOf(pair));
+                          //showAlertDialog(context);
                           //appState.removeHistory(pair);
                         }),
               ),
             ),
           );
-        },
-      ),
-    );
   }
 }
-
 
 // ...
 
